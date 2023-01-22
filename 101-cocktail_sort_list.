@@ -1,95 +1,90 @@
 #include "sort.h"
+
 /**
- *swap_node_infront - swaps a node in ahead manner
- *@list:pointer to head of a linked dblist
- *@tail:pointer to the tail of a dblinked list
- *@shaker: pointer to swapping node
- *Return: void
+ * list_len - function returns length of list
+ * @list: head of list
+ *
+ * Return: length
  */
-void swap_node_infront(listint_t **list, listint_t **tail, listint_t **shaker)
+size_t list_len(listint_t *list)
 {
-	listint_t *tmp = (*shaker)->next;
+	size_t len = 0;
 
-	if ((*shaker)->prev != NULL)
-		(*shaker)->prev->next = tmp;
-	else
-		*list = tmp;
-	tmp->prev = (*shaker)->prev;
-	(*shaker)->next = tmp->next;
-
-	if (tmp->next != NULL)
-		tmp->next->prev = *shaker;
-	else
-		*tail = *shaker;
-	(*shaker)->prev = tmp;
-	tmp->next = *shaker;
-	*shaker = tmp;
+	while (list)
+	{
+		len++;
+		list = list->next;
+	}
+	return (len);
 }
 
 /**
- *swap_node_back - swaps a dblinked list in a backward manner
- *@list:list to sort
- *@tail:tail of a dblinked list
- *@shaker:current node, one to swap
- *Return:void
+ * switch_nodes - function swaps nodes at pointer p with the following node
+ * @list: head of list
+ * @p: pointer to node
  */
-void swap_node_back(listint_t **list, listint_t **tail, listint_t **shaker)
+void switch_nodes(listint_t **list, listint_t **p)
 {
-	listint_t *tmp = (*shaker)->prev;
+	listint_t *one, *two, *three, *four;
 
-	if ((*shaker)->next != NULL)
-		(*shaker)->next->prev = tmp;
+	one = (*p)->prev;
+	two = *p;
+	three = (*p)->next;
+	four = (*p)->next->next;
+	two->next = four;
+	if (four)
+		four->prev = two;
+	three->next = two;
+	three->prev = two->prev;
+	if (one)
+		one->next = three;
 	else
-		*tail = tmp;
-	tmp->next = (*shaker)->next;
-	(*shaker)->prev = tmp->prev;
-	if (tmp->prev != NULL)
-		tmp->prev->next = *shaker;
-	else
-		*list = *shaker;
-	(*shaker)->next = tmp;
-	tmp->prev = *shaker;
-	*shaker = tmp;
+		*list = three;
+	two->prev = three;
+	*p = three;
 }
+
 /**
- *cocktail_sort_list - sorts a list using cocktail algorithm
- *@list:dblinked list to sort
- *Return: void
+ *  cocktail_sort_list - function sorts a doubly linked list using
+ * the cocktail sort algorithm
+ * @list: pointer to list
  */
 void cocktail_sort_list(listint_t **list)
 {
-	listint_t *tail, *shaker;
-	unsigned int shaken_unstirred = 0;
+	listint_t *p;
+	int sorted = 0;
 
-	if (list == NULL || *list == NULL || (*list)->next == NULL)
+	if (!list || !*list || list_len(*list) < 2)
 		return;
-
-	/*tail point to last node*/
-	for (tail = *list; tail->next != NULL; tail = tail->next)
-		;
-	while (shaken_unstirred == 0)
+	p = *list;
+	while (!sorted)
 	{
-		shaken_unstirred = 1;
-
-		/*forward sorting*/
-		for (shaker = *list; shaker != tail; shaker = shaker->next)
+		sorted = 1;
+		while (p->next)
 		{
-			if (shaker->n > shaker->next->n)
+			if (p->n > p->next->n)
 			{
-				swap_node_infront(list, &tail, &shaker);
-				print_list((const listint_t *)*list);
-				shaken_unstirred = 0;
+				sorted = 0;
+				switch_nodes(list, &p);
+				print_list(*list);
 			}
+			else
+				p = p->next;
 		}
-		for (shaker = shaker->prev; shaker != *list;
-		     shaker = shaker->prev)
+		if (sorted)
+			break;
+		p = p->prev;
+		while (p->prev)
 		{
-			if (shaker->n < shaker->prev->n)
+			if (p->n < p->prev->n)
 			{
-				swap_node_back(list, &tail, &shaker);
-				print_list((const listint_t *)*list);
-				shaken_unstirred = 0;
+				sorted = 0;
+				p = p->prev;
+				switch_nodes(list, &p);
+				print_list(*list);
 			}
+			else
+				p = p->prev;
 		}
 	}
 }
