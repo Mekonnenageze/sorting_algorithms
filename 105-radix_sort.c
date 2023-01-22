@@ -1,56 +1,101 @@
+#include <stdlib.h>
 #include "sort.h"
-
 /**
- * radix_sort - sorts an array following the Radix sort algorithm
- * @array: array of ints to sort
- * @size: size of the array
+ * csort2 - auxiliary function of radix sort
+ *
+ * @array: array of data to be sorted
+ * @buff: malloc buffer
+ * @size: size of data
+ * @lsd: Less significant digit
+ *
+ * Return: No Return
+ */
+void csort2(int *array, int **buff, int size, int lsd)
+{
+	int i, j, csize = 10, num;
+	int carr[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	int carr2[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+	for (i = 0; i < size; i++)
+	{
+		num = array[i];
+		for (j = 0; j < lsd; j++)
+			if (j > 0)
+				num = num / 10;
+		num = num % 10;
+		buff[num][carr[num]] = array[i];
+		carr[num] += 1;
+	}
+
+	for (i = 0, j = 0; i < csize; i++)
+	{
+		while (carr[i] > 0)
+		{
+			array[j] = buff[i][carr2[i]];
+			carr2[i] += 1, carr[i] -= 1;
+			j++;
+		}
+	}
+
+	print_array(array, size);
+}
+/**
+ * csort - auxiliary function of radix sort
+ *
+ * @array: array of data to be sorted
+ * @size: size of data
+ * @lsd: Less significant digit
+ *
+ * Return: No Return
+ */
+void csort(int *array, int size, int lsd)
+{
+	int carr[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	int i, j, num, csize = 10, **buff;
+
+	for (i = 0; i < size; i++)
+	{
+		num = array[i];
+		for (j = 0; j < lsd; j++)
+			if (j > 0)
+				num = num / 10;
+		num = num % 10;
+		carr[num] += 1;
+	}
+
+	if (carr[0] == size)
+		return;
+
+	buff = malloc(sizeof(int *) * 10);
+	if (!buff)
+		return;
+
+	for (i = 0; i < csize; i++)
+		if (carr[i] != 0)
+			buff[i] = malloc(sizeof(int) * carr[i]);
+
+
+	csort2(array, buff, size, lsd);
+
+	csort(array, size, lsd + 1);
+
+	for (i = 0; i < csize; i++)
+		if (carr[i] > 0)
+			free(buff[i]);
+	free(buff);
+}
+/**
+ * radix_sort - sorts an array of integers in ascending order using the Radix
+ * sort algorithm
+ *
+ * @array: array of data to be sorted
+ * @size: size of data
+ *
+ * Return: No Return
  */
 void radix_sort(int *array, size_t size)
 {
-	int max;
-	size_t i, lsd;
-
-	if (!array || size < 2)
+	if (size < 2)
 		return;
-
-	max = 0;
-	for (i = 0; i < size; i++)
-		if (array[i] > max)
-			max = array[i];
-
-	for (lsd = 1; max / lsd > 0; lsd *= 10)
-	{
-		count_sort_LSD(array, size, lsd);
-		print_array(array, size);
-	}
-}
-
-/**
- * count_sort_LSD - count sort with LSD
- * @array: array to sort
- * @size: size of the array
- * @lsd: least significant digit
- */
-void count_sort_LSD(int *array, size_t size, size_t lsd)
-{
-	int count_arr[10] = {0}, *out_arr, l, m;
-	size_t k, n;
-
-	out_arr = malloc(sizeof(int) * size);
-
-	for (k = 0; k < size; k++)
-		count_arr[(array[k] / lsd) % 10]++;
-	for (l = 1; l < 10; l++)
-		count_arr[l] += count_arr[l - 1];
-
-	for (m = size - 1; m >= 0; m--)
-	{
-		out_arr[count_arr[(array[m] / lsd) % 10] - 1] = array[m];
-		count_arr[(array[m] / lsd) % 10]--;
-	}
-
-	for (n = 0; n < size; n++)
-		array[n] = out_arr[n];
-
-	free(out_arr);
+	csort(array, size, 1);
 }
